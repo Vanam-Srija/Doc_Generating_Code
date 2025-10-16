@@ -1,0 +1,5 @@
+networkx
+matplotlib
+python-docx
+pygraphviz
+requests
