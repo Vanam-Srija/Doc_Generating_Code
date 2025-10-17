@@ -33,7 +33,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: iFlow-Documentation
-          path: ./*.docx
+          path: output_docs/**/*.docx
+
       - name: Commit and push generated document
         run: |
           git config user.name "github-actions[bot]"
