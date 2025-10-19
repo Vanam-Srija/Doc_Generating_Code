@@ -4,7 +4,7 @@ on:
   # Trigger manually or via repository_dispatch
   workflow_dispatch:
   repository_dispatch:
-    types: [generate-iflow-doc]
+    types: [generate-iflow-docs]
 
 jobs:
   generate_doc:
