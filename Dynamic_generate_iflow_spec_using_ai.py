@@ -19,7 +19,6 @@ with open("config_file.json", "r") as f:
 GEMINI_API_URL = config["gemini_api_url"]
 GEMINI_API_KEY = config["gemini_api_key"]
 XML_PATH = config["source_xml_path"]
-DOCX_PATH = config["target_docx_path"]
 GROOVY_SCRIPTS_FOLDER = config.get("groovy_scripts_folder", None)
 
 iflow_name = os.path.splitext(os.path.basename(XML_PATH))[0]
@@ -459,6 +458,7 @@ def get_all_groovy_scripts(folder_path):
 
 # --- Main Document Generation ---
 def generate_iflow_spec():
+    global DOCX_PATH
     import urllib3
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -957,20 +957,12 @@ def generate_iflow_spec():
     else:
         add_paragraph(doc, "No additional appendix info found in XML.")
 
-# Create an output directory (so GitHub Actions can easily find the file)
-
-    # Ensure file has a proper .docx name
-    if not DOCX_PATH.lower().endswith(".docx"):
-        DOCX_PATH = f"{DOCX_PATH}.docx"
-
-    # Save the document directly in the current directory (no folders)
-    output_path = os.path.basename(DOCX_PATH)
-
-    # Save the document
-    doc.save(output_path)
-
-# Print absolute path for debugging
-    print(f"✅ Document generated and saved at: {os.path.abspath(output_path)}")
+    # Create an output directory (so GitHub Actions can easily find the file)
+    # Ensure file has a proper .docx extension
+   # Python script
+    DOCX_PATH = "output.docx"
+    doc.save(DOCX_PATH)
+    print(f"Downloaded file saved locally as: {DOCX_PATH}")
 
 if __name__ == "__main__":
     generate_iflow_spec()
