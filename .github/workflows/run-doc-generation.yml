@@ -1,50 +1,67 @@
 name: Generate iFlow Documentation
 
 on:
+  # Trigger manually or via repository_dispatch
+  workflow_dispatch:
   repository_dispatch:
-    types: [generate-iflow-docs]
+    types: [generate-iflow-doc]
 
 jobs:
   generate_doc:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v3
+      # 1️⃣ Checkout repository
+      - name: 🧩 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Use token explicitly for push
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      # 2️⃣ Set up Python
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install System Dependencies for Graphviz
+      # 3️⃣ Install dependencies
+      - name: 📦 Install dependencies
         run: |
+          # Install system packages required by pygraphviz
           sudo apt-get update
-          sudo apt-get install -y graphviz graphviz-dev
+          sudo apt-get install -y graphviz graphviz-dev pkg-config
 
-      - name: Install Python Dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pygraphviz networkx matplotlib python-docx
+          # Upgrade pip
+          python -m pip install --upgrade pip
 
-      - name: Run iFlow Documentation Script
+          # Install Python dependencies
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install urllib3 openai requests pygraphviz || true
+
+      # 4️⃣ Run the document generation script
+      - name: 🧠 Generate iFlow Technical Document
         run: python Dynamic_generate_iflow_spec_using_ai.py
-      - name: Upload generated document
-        uses: actions/upload-artifact@v4
-        with:
-          name: iFlow-Documentation
-          path: output_docs/**/*.docx
 
-      - name: Commit and push generated document
+      # 5️⃣ Configure Git
+      - name: Configure Git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
 
-          # Add only new or updated docs
-          git add output_docs/**/*.docx || echo "No .docx files found"
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
+      # 6️⃣ Commit and push the generated doc using GITHUB_TOKEN
+      - name: Commit and Push Generated Doc
+        env:
+          GITHUB_TOKEN: ${{ secrets.PYTHON_REPO_TOKEN }}
+        run: |
+          DOC_FILE="output.docx"
+          if [ -f "$DOC_FILE" ]; then
+            git config user.name "github-actions"
+            git config user.email "github-actions@github.com"
+            
+            git add "$DOC_FILE"
+            git commit -m "Add/Update generated iFlow documentation" || echo "No changes to commit"
+            
+            # Use token to push via HTTPS
+            git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git HEAD:main
           else
-            git commit -m "Auto-generated iFlow documentation"
-            git push
-          fi  
+            echo "No doc file found to push."
+          fi
