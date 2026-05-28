@@ -10,17 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 🧩 Checkout repository
+      - name:  Checkout repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: 🐍 Set up Python
+      - name:  Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: 📦 Install dependencies
+      - name:  Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y graphviz graphviz-dev pkg-config
@@ -28,29 +28,29 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install urllib3 openai requests pygraphviz python-docx || true
 
-      - name: 🕒 Prepare output path
+      - name:  Prepare output path
         id: prep
         run: |
           mkdir -p output_docs
           echo "DOC_FILE=output_docs/iFlow_Documentation_$(date +'%Y-%m-%d_%H-%M-%S').docx" >> $GITHUB_ENV
 
-      - name: 🧠 Generate iFlow Technical Document
+      - name:  Generate iFlow Technical Document
         run: python Dynamic_generate_iflow_spec_using_ai.py "$DOC_FILE"
 
-      - name: 📁 Verify generated files
-        run: ls -l output_docs || echo "⚠️ No DOCX file found in output_docs/"
+      - name:  Verify generated files
+        run: ls -l output_docs || echo " No DOCX file found in output_docs/"
 
-      - name: ⚙️ Configure Git
+      - name:  Configure Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-      - name: 🚀 Commit and Push Generated Docs
+      - name:  Commit and Push Generated Docs
         env:
           GITHUB_TOKEN: ${{ secrets.PYTHON_REPO_TOKEN }}
         run: |
           if ls output_docs/*.docx 1> /dev/null 2>&1; then
-            echo "📝 Found DOCX files to commit..."
+            echo " Found DOCX files to commit..."
             git add output_docs/*.docx
 
             if git diff --cached --quiet; then
@@ -58,8 +58,8 @@ jobs:
             else
               git commit -m "Auto-generated iFlow documentation - $(date +'%Y-%m-%d %H:%M:%S')"
               git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git HEAD:main
-              echo "✅ Successfully pushed new documents to output_docs/."
+              echo " Successfully pushed new documents to output_docs/."
             fi
           else
-            echo "⚠️ No DOCX files found to push."
+            echo " No DOCX files found to push."
           fi
